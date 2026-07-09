@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
@@ -11,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:contentDescription="خلفية التطبيق" />
+        android:contentDescription="background" />
 
     <View
         android:layout_width="match_parent"
@@ -53,8 +51,7 @@
                     android:layout_height="48dp"
                     android:background="@drawable/glass_card"
                     android:src="@android:drawable/ic_menu_preferences"
-                    android:tint="@color/white_text"
-                    android:contentDescription="الإعدادات" />
+                    android:contentDescription="settings" />
             </LinearLayout>
 
             <LinearLayout
@@ -122,8 +119,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/btn_start_monitoring"
-                    style="@style/Button3D"
-                    android:background="@drawable/btn_3d_primary" />
+                    style="@style/Button3D" />
 
                 <View
                     android:layout_width="8dp"
@@ -135,8 +131,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/btn_change_background"
-                    style="@style/Button3D"
-                    android:background="@drawable/btn_3d_accent" />
+                    style="@style/Button3D" />
 
             </LinearLayout>
 
@@ -152,8 +147,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/btn_mute_temp"
-                    style="@style/Button3D"
-                    android:background="@drawable/btn_3d_accent" />
+                    style="@style/Button3D" />
 
                 <View
                     android:layout_width="8dp"
@@ -165,8 +159,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/btn_refresh_apps"
-                    style="@style/Button3D"
-                    android:background="@drawable/btn_3d_primary" />
+                    style="@style/Button3D" />
 
             </LinearLayout>
 
@@ -208,7 +201,6 @@
                     android:layout_height="wrap_content"
                     android:text="منح الإذن"
                     style="@style/Button3D"
-                    android:background="@drawable/btn_3d_primary"
                     android:visibility="gone"
                     android:layout_marginTop="8dp" />
 
