@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_cool_start">#1A2980</color>
+    <color name="bg_cool_center">#26D0CE</color>
+    <color name="bg_cool_end">#0F2027</color>
+
+    <color name="glass_background">#80FFFFFF</color>
+    <color name="glass_border">#B3FFFFFF</color>
+    <color name="glass_highlight">#CCFFFFFF</color>
+
+    <color name="primary_text">#0F2027</color>
+    <color name="secondary_text">#2C5364</color>
+    <color name="white_text">#FFFFFF</color>
+
+    <color name="battery_high">#4CAF50</color>
+    <color name="battery_medium">#FFC107</color>
+    <color name="battery_low">#F44336</color>
+    <color name="charging">#00BCD4</color>
+
+    <color name="btn_3d_top">#5BC8FF</color>
+    <color name="btn_3d_bottom">#1E90FF</color>
+    <color name="btn_3d_shadow">#0B5394</color>
+
+    <color name="btn_accent_top">#FFB199</color>
+    <color name="btn_accent_bottom">#FF5E62</color>
+    <color name="btn_accent_shadow">#B23B3F</color>
+
+    <color name="overlay_dark">#80000000</color>
+</resources>
