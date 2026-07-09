@@ -23,19 +23,30 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Setup Gradle
+    - name: Setup Gradle 8.3
       uses: gradle/gradle-build-action@v3
       with:
         gradle-version: 8.3
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x ./gradlew
+    - name: Download gradle-wrapper.jar
+      run: |
+        mkdir -p gradle/wrapper
+        curl -sL -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.3.0/gradle/wrapper/gradle-wrapper.jar
+        ls -la gradle/wrapper/
+
+    - name: Create gradlew script
+      run: |
+        cat > gradlew << 'EOF'
+        #!/bin/sh
+        exec gradle "$@"
+        EOF
+        chmod +x gradlew
 
     - name: Build Debug APK
-      run: ./gradlew assembleDebug --no-daemon --stacktrace
+      run: gradle assembleDebug --no-daemon --stacktrace
 
     - name: Build Release APK
-      run: ./gradlew assembleRelease --no-daemon --stacktrace
+      run: gradle assembleRelease --no-daemon --stacktrace
       continue-on-error: true
 
     - name: Upload Debug APK as artifact
