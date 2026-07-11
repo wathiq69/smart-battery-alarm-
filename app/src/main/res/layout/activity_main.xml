@@ -63,12 +63,11 @@
                 <ProgressBar
                     android:id="@+id/progressBattery"
                     style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="160dp"
-                    android:layout_height="160dp"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
                     android:progress="50"
                     android:max="100"
-                    android:progressDrawable="@drawable/battery_ring"
-                    android:rotation="-90" />
+                    android:progressDrawable="@drawable/battery_ring_animated" />
                 <TextView
                     android:id="@+id/tvBatteryPercent"
                     android:layout_width="wrap_content"
