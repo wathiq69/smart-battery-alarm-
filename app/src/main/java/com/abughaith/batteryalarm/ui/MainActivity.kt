@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {}
         }
     }
-       override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -68,7 +68,6 @@ class MainActivity : AppCompatActivity() {
         applyAnimations()
         checkAndRequestPermissions()
     }
-
     private fun applyAnimations() {
         try {
             val fadeIn = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in)
@@ -77,7 +76,6 @@ class MainActivity : AppCompatActivity() {
             binding.progressBattery.startAnimation(slideUp)
             binding.tvStatus.startAnimation(fadeIn)
         } catch (e: Exception) {}
-    } 
     }
     override fun onResume() {
         super.onResume()
@@ -252,7 +250,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         } catch (e: Exception) { Toast.makeText(this, "تعذر فتح الإعدادات", Toast.LENGTH_SHORT).show() }
     }
-       private fun isOnline(): Boolean {
+    private fun isOnline(): Boolean {
         return try {
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
             val net = cm.activeNetworkInfo
@@ -260,5 +258,5 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             false
         }
-    } 
+    }
 }
