@@ -28,10 +28,9 @@
         android:requestLegacyExternalStorage="true"
         tools:targetApi="34">
 
-        <activity
-            android:name=".ui.MainActivity"
+                <activity
+            android:name=".ui.SplashActivity"
             android:exported="true"
-            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SmartBatteryAlarm">
             <intent-filter>
@@ -39,6 +38,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmartBatteryAlarm" />
 
         <service
             android:name=".service.BatteryMonitorService"
