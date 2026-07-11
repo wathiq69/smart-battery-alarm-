@@ -137,7 +137,6 @@ class BatteryMonitorService : Service() {
         speakAndAlert(msg, "اكتمل الشحن!", NotificationManager.IMPORTANCE_HIGH)
     }
     private fun onChargerDisconnected(percent: Int) {
-        if (percent >= 100) return
         val msg = "تم فصل الشاحنة ونسبة الشحن الآن هي $percent بالمئة"
         speakAndAlert(msg, "تم فصل الشاحن ($percent%)", NotificationManager.IMPORTANCE_DEFAULT)
     }
