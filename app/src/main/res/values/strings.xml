@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Smart Battery Alarm</string>
+    <string name="app_name">المنبه الذكي للبطارية</string>
     <string name="battery_level_label">Battery Level</string>
     <string name="status_charging">Charging</string>
     <string name="status_discharging">On Battery</string>
