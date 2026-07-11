@@ -60,12 +60,24 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {}
         }
     }
-    override fun onCreate(savedInstanceState: Bundle?) {
+       override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupWindow(); setupRecyclerView(); setupClickListeners(); applyBackground()
+        applyAnimations()
         checkAndRequestPermissions()
+    }
+
+    private fun applyAnimations() {
+        try {
+            val fadeIn = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in)
+            val slideUp = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.slide_up)
+            binding.tvBatteryPercent.startAnimation(fadeIn)
+            binding.progressBattery.startAnimation(slideUp)
+            binding.tvStatus.startAnimation(fadeIn)
+        } catch (e: Exception) {}
+    } 
     }
     override fun onResume() {
         super.onResume()
