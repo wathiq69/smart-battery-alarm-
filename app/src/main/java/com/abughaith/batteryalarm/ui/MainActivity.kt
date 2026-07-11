@@ -252,9 +252,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         } catch (e: Exception) { Toast.makeText(this, "تعذر فتح الإعدادات", Toast.LENGTH_SHORT).show() }
     }
-    private fun isOnline(): Boolean {
-        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
-        val net = cm.activeNetworkInfo
-        return net != null && net.isConnected
-    }
+       private fun isOnline(): Boolean {
+        return try {
+            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            val net = cm.activeNetworkInfo
+            net != null && net.isConnected
+        } catch (e: Exception) {
+            false
+        }
+    } 
 }
