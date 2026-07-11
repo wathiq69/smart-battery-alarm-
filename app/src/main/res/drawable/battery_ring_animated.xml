@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- الخلفية الداكنة -->
+    <item>
+        <shape android:shape="ring"
+            android:innerRadiusRatio="2.4"
+            android:thicknessRatio="14"
+            android:useLevel="false">
+            <solid android:color="#30FFFFFF" />
+        </shape>
+    </item>
+    <!-- المؤشر المتحرك -->
+    <item>
+        <shape android:shape="ring"
+            android:innerRadiusRatio="2.4"
+            android:thicknessRatio="14"
+            android:useLevel="true">
+            <gradient
+                android:angle="0"
+                android:startColor="@color/charging"
+                android:endColor="@color/btn_3d_top"
+                android:type="sweep" />
+        </shape>
+    </item>
+</layer-list>
