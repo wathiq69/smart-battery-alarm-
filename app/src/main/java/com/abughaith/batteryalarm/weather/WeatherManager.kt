@@ -40,7 +40,17 @@ class WeatherManager private constructor(private val context: Context) {
     }
     private val prefs = PreferencesManager.getInstance(context)
 
+    // Cache: حفظ آخر طقس لمدة ساعة
+    private var cachedWeather: String? = null
+    private var cachedWeatherTime: Long = 0L
+    private val cacheDurationMs = 60 * 60 * 1000L // ساعة واحدة
+
     suspend fun getCurrentWeather(): String? = withContext(Dispatchers.IO) {
+        // تحقق من الـ cache أولاً
+        if (cachedWeather != null && System.currentTimeMillis() - cachedWeatherTime < cacheDurationMs) {
+            return@withContext cachedWeather
+        }
+
         if (!hasLocationPermission()) return@withContext null
         try {
             val location = getLastLocation() ?: return@withContext null
@@ -53,7 +63,13 @@ class WeatherManager private constructor(private val context: Context) {
             httpClient.newCall(req).execute().use { resp ->
                 if (!resp.isSuccessful) return@withContext null
                 val body = resp.body?.string() ?: return@withContext null
-                parseWeather(body, cityName)
+                val result = parseWeather(body, cityName)
+                // حفظ في cache
+                if (result != null) {
+                    cachedWeather = result
+                    cachedWeatherTime = System.currentTimeMillis()
+                }
+                result
             }
         } catch (e: Exception) { null }
     }
