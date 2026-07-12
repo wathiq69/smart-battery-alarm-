@@ -22,9 +22,8 @@ class TtsManager private constructor(private val context: Context) {
     private val pendingQueue = mutableListOf<String>()
     var onUtteranceDone: (() -> Unit)? = null
 
-    init { initTts() }
-
     private fun initTts() {
+        if (tts != null) return
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 val tts = this.tts ?: return@TextToSpeech
@@ -37,8 +36,14 @@ class TtsManager private constructor(private val context: Context) {
                 tts.setPitch(1.15f)
                 tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                     override fun onStart(utteranceId: String?) {}
-                    override fun onDone(utteranceId: String?) { onUtteranceDone?.invoke() }
-                    override fun onError(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) {
+                        onUtteranceDone?.invoke()
+                        // إغلاق TTS بعد الانتهاء لتوفير الذاكرة والبطارية
+                        shutdown()
+                    }
+                    override fun onError(utteranceId: String?) {
+                        shutdown()
+                    }
                 })
                 isReady.set(true)
                 synchronized(pendingQueue) {
@@ -71,6 +76,7 @@ class TtsManager private constructor(private val context: Context) {
         if (text.isBlank()) return
         if (!isReady.get() || tts == null) {
             synchronized(pendingQueue) { pendingQueue.add(text) }
+            initTts()
             return
         }
         try {
