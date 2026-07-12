@@ -1,6 +1,7 @@
 package com.abughaith.batteryalarm.ui
 
 import android.Manifest
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -20,9 +21,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.abughaith.batteryalarm.R
-import com.abughaith.batteryalarm.apps.AppUsageManager
 import com.abughaith.batteryalarm.databinding.ActivityMainBinding
 import com.abughaith.batteryalarm.prefs.PreferencesManager
 import com.abughaith.batteryalarm.service.BatteryMonitorService
@@ -37,37 +36,57 @@ class MainActivity : AppCompatActivity() {
     private val prefs by lazy { PreferencesManager.getInstance(this) }
     private val tts by lazy { TtsManager.getInstance(this) }
     private val weather by lazy { WeatherManager.getInstance(this) }
-    private val appUsage by lazy { AppUsageManager.getInstance(this) }
-    private val appsAdapter by lazy { AppUsageAdapter { pkg -> appUsage.openAppSettingsForForceStop(pkg) } }
     private val batteryReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) { intent?.let { updateBatteryUi(it) } }
     }
     private val permissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
-        if (results.values.all { it }) { refreshAppsList(); speakWelcomeMessage() }
+        if (results.values.all { it }) { speakWelcomeMessage() }
         else { Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show() }
     }
+
+    // محدد الخلفية المُصحّح
     private val bgPicker = registerForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            try {
-                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                prefs.backgroundUri = uri.toString()
-                applyBackground()
-                Toast.makeText(this, "تم تغيير الخلفية", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {}
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val uri = data?.data
+            if (uri != null) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                    prefs.backgroundUri = uri.toString()
+                    applyBackground()
+                    Toast.makeText(this, "تم تغيير الخلفية بنجاح", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    // محاولة بديلة بدون takePersistableUriPermission
+                    try {
+                        prefs.backgroundUri = uri.toString()
+                        applyBackground()
+                        Toast.makeText(this, "تم تغيير الخلفية", Toast.LENGTH_SHORT).show()
+                    } catch (e2: Exception) {
+                        Toast.makeText(this, "تعذر حفظ الصورة", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setupWindow(); setupRecyclerView(); setupClickListeners(); applyBackground()
+        setupWindow()
+        setupClickListeners()
+        applyBackground()
         applyAnimations()
         checkAndRequestPermissions()
     }
+
     private fun applyAnimations() {
         try {
             val fadeIn = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in)
@@ -77,13 +96,17 @@ class MainActivity : AppCompatActivity() {
             binding.tvStatus.startAnimation(fadeIn)
         } catch (e: Exception) {}
     }
+
     override fun onResume() {
         super.onResume()
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         registerReceiver(batteryReceiver, filter)
-        refreshAppsList()
     }
-    override fun onPause() { super.onPause(); try { unregisterReceiver(batteryReceiver) } catch (_: Exception) {} }
+    override fun onPause() {
+        super.onPause()
+        try { unregisterReceiver(batteryReceiver) } catch (_: Exception) {}
+    }
+
     private fun setupWindow() {
         window.apply {
             statusBarColor = Color.TRANSPARENT
@@ -91,23 +114,42 @@ class MainActivity : AppCompatActivity() {
             decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
     }
-    private fun setupRecyclerView() {
-        binding.recyclerApps.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = appsAdapter
-            isNestedScrollingEnabled = false
-        }
-    }
+
     private fun setupClickListeners() {
         binding.btnStartMonitoring.setOnClickListener { startMonitoringService() }
         binding.btnSettings.setOnClickListener { showSettingsDialog() }
-        binding.btnChangeBackground.setOnClickListener { bgPicker.launch(arrayOf("image/*")) }
+        binding.btnChangeBackground.setOnClickListener { openBackgroundPicker() }
         binding.btnMuteTemp.setOnClickListener { showMuteDialog() }
-        binding.btnRefreshApps.setOnClickListener {
-            if (appUsage.hasUsageStatsPermission()) refreshAppsList() else appUsage.openUsageAccessSettings()
+        binding.btnTestSound.setOnClickListener {
+            val percent = getCurrentBatteryPercent()
+            tts.speakNow("السلام عليكم استاذ ${prefs.ownerName}، مستوى شحن البطارية الآن هو $percent بالمئة")
+            Toast.makeText(this, "جاري اختبار الصوت...", Toast.LENGTH_SHORT).show()
         }
-        binding.btnGrantUsage.setOnClickListener { appUsage.openUsageAccessSettings() }
     }
+
+    // طريقة مُصحّحة لفتح منتقي الصور
+    private fun openBackgroundPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        try {
+            bgPicker.launch(intent)
+        } catch (e: Exception) {
+            // محاولة بديلة
+            try {
+                val fallbackIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                    type = "image/*"
+                }
+                bgPicker.launch(fallbackIntent)
+            } catch (e2: Exception) {
+                Toast.makeText(this, "تعذر فتح معرض الصور", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun checkAndRequestPermissions() {
         val needed = mutableListOf<String>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -125,26 +167,27 @@ class MainActivity : AppCompatActivity() {
         }
         if (needed.isNotEmpty()) permissionsLauncher.launch(needed.toTypedArray())
         else { startMonitoringService(); speakWelcomeMessage() }
-        updateUsagePermissionHint()
     }
-    private fun updateUsagePermissionHint() {
-        val granted = appUsage.hasUsageStatsPermission()
-        binding.tvPermissionHint.visibility = if (granted) View.GONE else View.VISIBLE
-        binding.btnGrantUsage.visibility = if (granted) View.GONE else View.VISIBLE
-    }
+
     private fun startMonitoringService() {
         val intent = Intent(this, BatteryMonitorService::class.java).apply { action = BatteryMonitorService.ACTION_START }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ContextCompat.startForegroundService(this, intent)
         else startService(intent)
         Toast.makeText(this, "تم تشغيل المراقبة", Toast.LENGTH_SHORT).show()
     }
+
     private fun stopMonitoringService() {
         val intent = Intent(this, BatteryMonitorService::class.java).apply { action = BatteryMonitorService.ACTION_STOP }
         startService(intent)
     }
-    private fun speakWelcomeMessage() {
+
+    private fun getCurrentBatteryPercent(): Int {
         val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-        val percent = intent?.let { computePercent(it) } ?: -1
+        return intent?.let { computePercent(it) } ?: -1
+    }
+
+    private fun speakWelcomeMessage() {
+        val percent = getCurrentBatteryPercent()
         val owner = prefs.ownerName
         val baseMsg = "السلام عليكم استاذ $owner، مستوى شحن البطارية الآن هو $percent بالمئة"
         if (prefs.weatherEnabled && isOnline()) {
@@ -159,12 +202,14 @@ class MainActivity : AppCompatActivity() {
             }
         } else { tts.speakNow(baseMsg); binding.tvWeather.visibility = View.GONE }
     }
+
     private fun computePercent(intent: Intent): Int {
         val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
         if (level < 0 || scale <= 0) return -1
         return (level.toFloat() / scale.toFloat() * 100f).toInt().coerceIn(0, 100)
     }
+
     private fun updateBatteryUi(intent: Intent) {
         val percent = computePercent(intent)
         val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
@@ -182,13 +227,7 @@ class MainActivity : AppCompatActivity() {
         } else if (!isCharging) "البطارية تعمل بشكل طبيعي" else "اكتمل الشحن"
         binding.tvBatteryInfo.text = infoText
     }
-    private fun refreshAppsList() {
-        if (!appUsage.hasUsageStatsPermission()) { updateUsagePermissionHint(); return }
-        lifecycleScope.launch {
-            val apps = withContext(Dispatchers.IO) { appUsage.getTopAppsByUsage(15) }
-            appsAdapter.submitList(apps)
-        }
-    }
+
     private fun applyBackground() {
         val uri = prefs.getBackgroundUri()
         if (uri != null) {
@@ -197,9 +236,13 @@ class MainActivity : AppCompatActivity() {
                 val bmp = BitmapFactory.decodeStream(input)
                 binding.backgroundImage.setImageBitmap(bmp)
                 binding.backgroundImage.visibility = View.VISIBLE
-            } catch (e: Exception) { binding.backgroundImage.visibility = View.GONE }
+            } catch (e: Exception) {
+                binding.backgroundImage.visibility = View.GONE
+                prefs.backgroundUri = ""
+            }
         } else { binding.backgroundImage.visibility = View.GONE }
     }
+
     private fun showMuteDialog() {
         val items = arrayOf(getString(R.string.mute_for_1h), getString(R.string.mute_for_3h), getString(R.string.mute_until_morning), getString(R.string.unmute))
         AlertDialog.Builder(this).setTitle("خيارات الكتم").setItems(items) { _, which ->
@@ -211,6 +254,7 @@ class MainActivity : AppCompatActivity() {
             }
         }.show()
     }
+
     private fun showSettingsDialog() {
         val items = arrayOf(
             "تغيير اسم المالك (الحالي: ${prefs.ownerName})",
@@ -231,12 +275,14 @@ class MainActivity : AppCompatActivity() {
             }
         }.show()
     }
+
     private fun showOwnerNameDialog() {
         val input = android.widget.EditText(this).apply { setText(prefs.ownerName); hint = "أدخل الاسم" }
         AlertDialog.Builder(this).setTitle("اسم المالك").setView(input)
             .setPositiveButton("حفظ") { _, _ -> prefs.ownerName = input.text.toString().ifBlank { "أبو غيث" }; Toast.makeText(this, "تم الحفظ", Toast.LENGTH_SHORT).show() }
             .setNegativeButton("إلغاء", null).show()
     }
+
     private fun showChargeSpeedDialog() {
         val items = arrayOf("1 ساعة (شاحن سريع 33W+)", "1.5 ساعة (افتراضي)", "2 ساعة", "2.5 ساعة", "3 ساعات (شاحن بطيء)")
         val values = floatArrayOf(1.0f, 1.5f, 2.0f, 2.5f, 3.0f)
@@ -244,19 +290,19 @@ class MainActivity : AppCompatActivity() {
             prefs.chargeSpeedHours = values[which]; Toast.makeText(this, "تم الحفظ", Toast.LENGTH_SHORT).show()
         }.show()
     }
+
     private fun openBatteryOptimization() {
         try {
             val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
             startActivity(intent)
         } catch (e: Exception) { Toast.makeText(this, "تعذر فتح الإعدادات", Toast.LENGTH_SHORT).show() }
     }
+
     private fun isOnline(): Boolean {
         return try {
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
             val net = cm.activeNetworkInfo
             net != null && net.isConnected
-        } catch (e: Exception) {
-            false
-        }
+        } catch (e: Exception) { false }
     }
 }
